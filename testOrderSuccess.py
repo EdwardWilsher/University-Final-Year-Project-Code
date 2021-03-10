@@ -87,6 +87,8 @@ def getSolutions(givenProblem):
     return
 
 
+print("Testing Started")
+
 for x in range(0, numberOfProblems):
     validProblem = False
 
@@ -100,6 +102,15 @@ for x in range(0, numberOfProblems):
     # Gets the solutions to the problem in a separate thread
     thread = threading.Thread(target=getSolutions, args=(problem,))
     thread.start()
+
+    outputThread = threading.Thread(target=utilities.outputPercentageComplete, args=(x + 1, numberOfProblems, qLearningAgent.getNumberOfReseenProblems(),))
+    outputThread.start()
+
+while (thread.is_alive() or outputThread.is_alive()):
+    # Waits for all threads to be completed
+    pass
+
+print("Testing Finished")
 
 # Stop the timer
 timeTaken = time.time() - startTime

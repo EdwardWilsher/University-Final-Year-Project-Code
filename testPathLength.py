@@ -6,6 +6,7 @@ import heuristics
 import rlAgents
 import time
 import utilities
+import threading
 
 # Number of problems that will be used to test the RL Agent and the number of points in each problem
 numberOfProblems = int(input("Please input the number of problems to use to test the solutions: "))
@@ -73,6 +74,8 @@ bruteOrders = [[-1]*numberOfPoints]*numberOfProblems
 bruteSuccesses = [-1]*numberOfProblems
 bruteRewards = [-1] * numberOfProblems
 
+print("Testing Started")
+
 for x in range(0, numberOfProblems):
     validProblem = False
 
@@ -100,6 +103,16 @@ for x in range(0, numberOfProblems):
 
     # Gets the RL Agent solution to the problem
     qLearnOrders[x], qLearnSuccesses[x], qLearnRewards[x] = qLearningAgent.getSolution(problem)
+
+    # Starts the thread to output the percentage complete
+    outputThread = threading.Thread(target=utilities.outputPercentageComplete, args=(x + 1, numberOfProblems, qLearningAgent.getNumberOfReseenProblems(),))
+    outputThread.start()
+
+while (outputThread.is_alive()):
+    # Waits for all threads to be completed
+    pass
+
+print("Testing Finished")
 
 # Lists of the rewards for the successful orderings
 manhatRewSuc = []

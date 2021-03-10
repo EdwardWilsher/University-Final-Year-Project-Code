@@ -47,6 +47,9 @@ class QLearningAgent(BaseRLAgent):
         # Initialises the number to round to
         self.roundNumber = numberToRound
 
+        # Initialises the reseen problem counter
+        self.reseenProblems = 0
+
     def __learnProblem(self, learnProblem):
         # Gets the permuted problem and the permutation
         permutedProblem, _ = self.__permuteProblem(learnProblem)
@@ -89,6 +92,8 @@ class QLearningAgent(BaseRLAgent):
 
     # Allows the agent to learn using the specified number of problems
     def learn(self, numberOfProblems, squareSize):
+        print("Learning Started")
+
         for i in range(0, numberOfProblems):
             validProblem = False
 
@@ -100,8 +105,18 @@ class QLearningAgent(BaseRLAgent):
                 # Checks whether the problem is valid
                 validProblem = utilities.checkValidProblem(problem) if squareSize == 0 else True
 
+            # Create and start the threads
             thread = threading.Thread(target=self.__learnProblem, args=(problem,))
             thread.start()
+
+            outputThread = threading.Thread(target=utilities.outputPercentageComplete, args=(i + 1, numberOfProblems, self.reseenProblems,))
+            outputThread.start()
+
+        while (thread.is_alive() or outputThread.is_alive()):
+            # Waits for all threads to be completed
+            pass
+
+        print("Learning Finished")
 
     def __getNextLearnAction(self, problem, order):
         # Gets the next action when the agent is learning
@@ -319,7 +334,7 @@ class QLearningAgent(BaseRLAgent):
 
             if (action in self.actions[problemIndex]):
                 # If the problem and action has already been done, need to edit the reward
-                print("Problem and action seen")
+                self.reseenProblems += 1
 
                 # Gets the index of the action
                 # This doesn't need a try-catch as a linear search is faster
@@ -427,3 +442,7 @@ class QLearningAgent(BaseRLAgent):
         except KeyError:
             # Problem not seen so presume success
             return 1
+
+    def getNumberOfReseenProblems(self):
+        # Returns the counter reseenProblems
+        return self.reseenProblems

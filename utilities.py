@@ -89,3 +89,27 @@ def generateSmallerProblem(numberOfPoints, squareSize):
 
     # Returns the array
     return problem
+
+def outputPercentageComplete(problemNumber, totalNumber, numberOfReseenProblems):
+    # Outputs the percentage complete
+    # Also outputs the number of problems re-seen
+    if (((problemNumber / totalNumber) * 100) == 10):
+        print("10% complete. Problems Reseen: ", numberOfReseenProblems)
+    elif (((problemNumber / totalNumber) * 100) == 20):
+        print("20% complete. Problems Reseen: ", numberOfReseenProblems)
+    elif (((problemNumber / totalNumber) * 100) == 30):
+        print("30% complete. Problems Reseen: ", numberOfReseenProblems)
+    elif (((problemNumber / totalNumber) * 100) == 40):
+        print("40% complete. Problems Reseen: ", numberOfReseenProblems)
+    elif (((problemNumber / totalNumber) * 100) == 50):
+        print("50% complete. Problems Reseen: ", numberOfReseenProblems)
+    elif (((problemNumber / totalNumber) * 100) == 60):
+        print("60% complete. Problems Reseen: ", numberOfReseenProblems)
+    elif (((problemNumber / totalNumber) * 100) == 70):
+        print("70% complete. Problems Reseen: ", numberOfReseenProblems)
+    elif (((problemNumber / totalNumber) * 100) == 80):
+        print("80% complete. Problems Reseen: ", numberOfReseenProblems)
+    elif (((problemNumber / totalNumber) * 100) == 90):
+        print("90% complete. Problems Reseen: ", numberOfReseenProblems)
+    elif (((problemNumber / totalNumber) * 100) == 100):
+        print("100% complete. Problems Reseen: ", numberOfReseenProblems)
