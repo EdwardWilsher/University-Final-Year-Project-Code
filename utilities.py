@@ -2,6 +2,9 @@ import numpy
 import math
 import random
 
+# Constant for the max reward value per point
+MaxRewardPerPoint = 2000
+
 def checkValidProblem(problem):
     # Checks whether the problem passed in is valid
     # Does this by checking whether each point is at least 15 units away from each other point

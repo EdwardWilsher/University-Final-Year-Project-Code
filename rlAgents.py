@@ -73,7 +73,7 @@ class QLearningAgent(BaseRLAgent):
             # Get the reward and success
             # Does 100000 - reward so that we can use the conventional Q-Learning algorithm
             # It allows for us to look at maximums rather than minimums
-            reward = 100000 - result["measure"]
+            reward = (utilities.MaxRewardPerPoint * len(newOrder)) - result["measure"]
             success = result["success"]
 
             # If the action was unsuccessful, change the reward to reflect this
@@ -142,7 +142,7 @@ class QLearningAgent(BaseRLAgent):
                 expectedReward = (self.rewards1[problemIndex][i] + self.rewards2[problemIndex][i]) / 2
 
                 # For now, if the state hasn't been seen yet then it will look at it
-                expectedInformation = 100000 if ((self.success[problemIndex][i] == 1) and (expectedReward == 0)) else 0
+                expectedInformation = (utilities.MaxRewardPerPoint * (len(order) + 1)) if ((self.success[problemIndex][i] == 1) and (expectedReward == 0)) else 0
 
                 expectedReward = expectedReward + expectedInformation
 
@@ -202,7 +202,7 @@ class QLearningAgent(BaseRLAgent):
             # Get the reward and success
             # Does 100000 - reward so that we can use the conventional Q-Learning algorithm
             # It allows for us to look at maximums rather than minimums
-            reward = 100000 - result["measure"]
+            reward = (utilities.MaxRewardPerPoint * len(newOrder)) - result["measure"]
             success = result["success"]
 
             # If the action was unsuccessful, change the reward to reflect this

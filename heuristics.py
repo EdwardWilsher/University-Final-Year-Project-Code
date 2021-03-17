@@ -53,7 +53,7 @@ class ManhattanHeuristic(BaseHeuristic):
 
         # Submits the ordering to see how well it did and returns the result and action
         result = copt.evaluate(problem, order)
-        return result['order'], result['success'], 100000 - result['measure']
+        return result['order'], result['success'], (utilities.MaxRewardPerPoint * numberOfPoints) - result['measure']
 
     # Finds the next point to connect when using the manhattan heuristic
     @staticmethod
@@ -102,7 +102,7 @@ class RandomHeuristic(BaseHeuristic):
 
         # Submits the ordering to see how well it did and returns the result and success
         result = copt.evaluate(problem, order)
-        return result['order'], result['success'], 100000 - result['measure']
+        return result['order'], result['success'], (utilities.MaxRewardPerPoint * numberOfPoints) - result['measure']
 
     # Finds the next point to connect when using the random ordering
     @staticmethod
@@ -141,13 +141,13 @@ class HillClimbing(BaseHeuristic):
                 result = copt.evaluate(problem, neighbour)
 
                 # Check to see if this reward is better
-                if ((result['success'] == 1) and ((100000 - result['measure']) > bestNeighbourReward)):
-                    bestNeighbourReward = result['measure']
+                if ((result['success'] == 1) and (((utilities.MaxRewardPerPoint * len(problem)) - result['measure']) > bestNeighbourReward)):
+                    bestNeighbourReward = (utilities.MaxRewardPerPoint * len(problem)) - result['measure']
                     currentSolution = neighbour
 
         # Gets all the values for the chosen ordering
         result = copt.evaluate(problem, currentSolution)
-        return result['order'], result['success'], 100000 - result['measure']
+        return result['order'], result['success'], (utilities.MaxRewardPerPoint * len(problem)) - result['measure']
 
 class SimulatedAnnealing(BaseHeuristic):
 
@@ -174,7 +174,7 @@ class SimulatedAnnealing(BaseHeuristic):
                 result = copt.evaluate(problem, neighbourSol)
 
                 # Gets the reward
-                newReward = 0 if result['success'] == 0 else 100000 - result['measure']
+                newReward = 0 if result['success'] == 0 else (utilities.MaxRewardPerPoint * len(problem)) - result['measure']
 
                 # Calculates the values used in the if-statement
                 randomNum = random.random()
@@ -190,4 +190,4 @@ class SimulatedAnnealing(BaseHeuristic):
 
         # Gets all the values for the chosen ordering
         result = copt.evaluate(problem, currentSolution)
-        return result['order'], result['success'], 100000 - result['measure']
+        return result['order'], result['success'], (utilities.MaxRewardPerPoint * len(problem)) - result['measure']

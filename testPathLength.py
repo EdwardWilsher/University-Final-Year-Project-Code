@@ -127,27 +127,27 @@ qLearnRewSuc = []
 # Otherwise it is added to the list of successful rewards
 for x in range(0, numberOfProblems):
     if (manhatSuccesses[x] == 0):
-        manhatRewards[x] = bruteRewards[x]
+        manhatRewards[x] = bruteRewards[x] - 300
     else:
         manhatRewSuc.append(bruteRewards[x] - manhatRewards[x])
 
     if (randSuccesses[x] == 0):
-        randRewards[x] = bruteRewards[x]
+        randRewards[x] = bruteRewards[x] - 300
     else:
         randRewSuc.append(bruteRewards[x] - randRewards[x])
 
     if (hillClimbSuccesses[x] == 0):
-        hillClimbRewards[x] = bruteRewards[x]
+        hillClimbRewards[x] = bruteRewards[x] - 300
     else:
         hillClimbRewSuc.append(bruteRewards[x] - hillClimbRewards[x])
 
     if (simAnnealSuccesses[x] == 0):
-        simAnnealRewards[x] = bruteRewards[x]
+        simAnnealRewards[x] = bruteRewards[x] - 300
     else:
         simAnnealRewSuc.append(bruteRewards[x] - simAnnealRewards[x])
 
     if (qLearnSuccesses[x] == 0):
-        qLearnRewards[x] = bruteRewards[x]
+        qLearnRewards[x] = bruteRewards[x] - 300
     else:
         qLearnRewSuc.append(bruteRewards[x] - qLearnRewards[x])
 
@@ -190,15 +190,15 @@ plots[4].set_title("Q-Learning Agent")
 
 # Checks to see if there was any orderings in the successful rewards lists
 if (len(manhatRewSuc) == 0):
-    manhatRewSuc.append(100000)
+    manhatRewSuc.append(utilities.MaxRewardPerPoint * numberOfPoints)
 if (len(randRewSuc) == 0):
-    randRewSuc.append(100000)
+    randRewSuc.append(utilities.MaxRewardPerPoint * numberOfPoints)
 if (len(hillClimbRewSuc) == 0):
-    hillClimbRewSuc.append(100000)
+    hillClimbRewSuc.append(utilities.MaxRewardPerPoint * numberOfPoints)
 if (len(simAnnealRewSuc) == 0):
-    simAnnealRewSuc.append(100000)
+    simAnnealRewSuc.append(utilities.MaxRewardPerPoint * numberOfPoints)
 if (len(qLearnRewSuc) == 0):
-    qLearnRewSuc.append(100000)
+    qLearnRewSuc.append(utilities.MaxRewardPerPoint * numberOfPoints)
 
 print("Manhattan Average: ", sum(manhatRewSuc) / len(manhatRewSuc))
 print("Random Average: ", sum(randRewSuc) / len(randRewSuc))

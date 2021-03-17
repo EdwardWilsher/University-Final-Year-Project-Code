@@ -1,5 +1,6 @@
 import numpy
 import copt
+import utilities
 
 # Gets the best solution for the inputted problem
 def getSolution(problem):
@@ -9,7 +10,7 @@ def getSolution(problem):
     # The best solution is always the first one
     if (len(solutions) != 0):
         bestOrder = solutions[0]['order']
-        bestReward = 100000 - solutions[0]['measure']
+        bestReward = (utilities.MaxRewardPerPoint * len(problem)) - solutions[0]['measure']
         success = solutions[0]['success']
 
         return bestOrder, success, bestReward
