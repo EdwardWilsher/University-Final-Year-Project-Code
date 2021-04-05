@@ -6,23 +6,31 @@ import heuristics
 import utilities
 import threading
 
+# region Base Class
+
 # Base Reinforcement Learning Agent that forces all RL Agents to implement the methods learn and getSolution
 class BaseRLAgent:
     # Declares this class as an abstract class
     __metaclass__ = abc.ABCMeta
 
+    # This method will allow the RL agent to learn
     @abc.abstractmethod
     def learn(self, numberOfProblems, squareSize):
-        # This method will allow the RL agent to learn
         return
 
+    # This method will return the computed solution to the problem
     @abc.abstractmethod
     def getSolution(self, problem):
-        # This method will return the computed solution to the problem
         return
+
+# endregion
+
+# region Q-Learning
 
 # Q-Learning agent
 class QLearningAgent(BaseRLAgent):
+
+    # region Constructor
 
     # Constructor that initialises all the arrays and constants
     def __init__(self, numberOfPoints, numberToRound):
@@ -33,13 +41,17 @@ class QLearningAgent(BaseRLAgent):
         self.rewards1 = []
         self.rewards2 = []
 
+        # Initialises two array that stores the uncertainty of the action
+        self.actionUncertainty1 = []
+        self.actionUncertainty2 = []
+
         # Initialises the number of points that need to be connected
         self.points = numberOfPoints
 
         # Initialises alpha and gamma which are used in the Q-Learning algorithm
         # Alpha is the learning rate and Gamma represents how much the agent values future rewards
         self.alpha = 0.1
-        self.gamma = 0.1
+        self.gamma = 0.8
 
         # Initialises epsilon, the chance a random action is chosen in action for the agent to learn
         self.epsilon = 0.1
@@ -50,7 +62,26 @@ class QLearningAgent(BaseRLAgent):
         # Initialises the reseen problem counter
         self.reseenProblems = 0
 
-    def __learnProblem(self, learnProblem):
+        # Initialises the arrays that will store the rewards and successes when the agent is learning
+        self.learnRewards = []
+        self.learnSuccesses = []
+
+        # Initialises the minimum change and number of times seen variable
+        self.minChange = 0.7
+        self.requiredTimesSeen = 3
+
+        # Initialises the counters and temporary reward arrays
+        self.timesSeen1 = []
+        self.timesSeen2 = []
+        self.tempReward1 = []
+        self.tempReward2 = []
+
+    # endregion
+
+    # region Learn
+
+    # Takes in a problem and learns from the actions it takes in it
+    def __learnProblem(self, learnProblem, index):
         # Gets the permuted problem and the permutation
         permutedProblem, _ = self.__permuteProblem(learnProblem)
 
@@ -88,11 +119,21 @@ class QLearningAgent(BaseRLAgent):
 
             if (success == 0):
                 # If the action was unsuccessful then can finish with this problem
-                break
+                self.learnRewards[index] = 0
+                self.learnSuccesses[index] = 0
+                return
+
+        # Gone through the for-loop so ordering is successful
+        self.learnRewards[index] = reward
+        self.learnSuccesses[index] = 1
 
     # Allows the agent to learn using the specified number of problems
     def learn(self, numberOfProblems, squareSize):
         print("Learning Started")
+
+        if (numberOfProblems <= 0):
+            print("Learning Finished")
+            return
 
         for i in range(0, numberOfProblems):
             validProblem = False
@@ -105,8 +146,12 @@ class QLearningAgent(BaseRLAgent):
                 # Checks whether the problem is valid
                 validProblem = utilities.checkValidProblem(problem) if squareSize == 0 else True
 
+            # Add an index to the reward and success arrays
+            self.learnRewards.append(0)
+            self.learnSuccesses.append(0)
+
             # Create and start the threads
-            thread = threading.Thread(target=self.__learnProblem, args=(problem,))
+            thread = threading.Thread(target=self.__learnProblem, args=(problem, len(self.learnRewards) - 1))
             thread.start()
 
             outputThread = threading.Thread(target=utilities.outputPercentageComplete, args=(i + 1, numberOfProblems, self.reseenProblems,))
@@ -118,8 +163,8 @@ class QLearningAgent(BaseRLAgent):
 
         print("Learning Finished")
 
+    # Gets the next action when the agent is learning
     def __getNextLearnAction(self, problem, order):
-        # Gets the next action when the agent is learning
         # Sets up the problem data to be how all problem data is stored
         problemData = str(problem + [order])
 
@@ -130,8 +175,8 @@ class QLearningAgent(BaseRLAgent):
             problemIndex = self.problems[problemData]
 
             # Sets up the arrays to store the optimal next action and optimal reward
-            optimalNextAction = -1
-            optimalReward = -1
+            optimalNextAction = [-1]
+            optimalReward = -10000
 
             # Iterates through all the tried actions
             for i in range(0, len(self.actions[problemIndex])):
@@ -141,38 +186,37 @@ class QLearningAgent(BaseRLAgent):
                 # So the best action is always chosen
                 expectedReward = (self.rewards1[problemIndex][i] + self.rewards2[problemIndex][i]) / 2
 
-                # For now, if the state hasn't been seen yet then it will look at it
-                expectedInformation = (utilities.MaxRewardPerPoint * (len(order) + 1)) if ((self.success[problemIndex][i] == 1) and (expectedReward == 0)) else 0
+                # Adds a ratio of the max possible reward depending on how uncertain the action is
+                expectedInformation = (utilities.MaxRewardPerPoint * (len(order)+2)) * ((self.actionUncertainty1[problemIndex][i] + self.actionUncertainty2[problemIndex][i]) / 2)
 
                 expectedReward = expectedReward + expectedInformation
 
                 # Checks to see if the action was successful and checks that a higher reward was returned
                 if ((self.success[problemIndex][i] == 1) and (expectedReward > optimalReward)):
-                    optimalNextAction = self.actions[problemIndex][i]
+                    optimalNextAction = [self.actions[problemIndex][i]]
                     optimalReward = expectedReward
+                elif ((self.success[problemIndex][i] == 1) and (expectedReward == optimalReward)):
+                    optimalNextAction.append(self.actions[problemIndex][i])
 
             # Checks if a valid ordering was found
-            if (optimalNextAction == -1):
-                # Finds the action which will connect the closest two points not already connected
-                nextAction = heuristics.ManhattanHeuristic().getNextAction(problem, order)
-
-                # Checks to see if all the actions have been seen
-                # If so, all are unsuccessful so can return any
-                if (self.points == (len(permutedOrder) + len(self.actions[problemIndex]))):
-                    return nextAction
-
-                while (nextAction in self.actions[problemIndex]):
-                    # Keep getting a new action until its not been seen before
-                    nextAction = heuristics.RandomHeuristic().getNextAction(problem, order)
-
-                # Found a different action to use
-                return nextAction
+            if (optimalNextAction == [-1]):
+                # No optimal action found so just return a random one
+                return heuristics.RandomHeuristic().getNextAction(problem, order)
             else:
-                # Valid action found so return it
-                return optimalNextAction
+                # Valid action found
+                if (len(optimalNextAction) > 1):
+                    # If there are multiple options, choose one at random
+                    return random.choice(optimalNextAction)
+                else:
+                    # Only 1 optimal action so return it
+                    return optimalNextAction[0]
         except KeyError:
-            # Problem not seen already so find the shortest distance between points
-            return heuristics.ManhattanHeuristic().getNextAction(problem, order)
+            # Problem not seen already so return a random action
+            return heuristics.RandomHeuristic().getNextAction(problem, order)
+
+    # endregion
+
+    # region Get Solution
 
     # Gets a solution to the problem
     def getSolution(self, problem):
@@ -274,6 +318,10 @@ class QLearningAgent(BaseRLAgent):
             # Problem not seen already so find the shortest distance between points
             return heuristics.ManhattanHeuristic().getNextAction(permutedProblem, permutedOrder)
 
+    # endregion
+
+    # region Permute
+
     # Permutes the problem so that the point with the smallest x index will be first etc
     # Returns the permuted problem as well as the permutation
     def __permuteProblem(self, problem):
@@ -322,6 +370,10 @@ class QLearningAgent(BaseRLAgent):
         # Returns the new problem and index
         return permutedProblem, permutation
 
+    # endregion
+
+    # region Update Q-Table
+
     # Updates all the arrays that are used in storing the action-space
     # Uses the Q-Learning algorithm to update them
     def __updateArrays(self, problem, previousOrder, action, success, reward):
@@ -332,107 +384,161 @@ class QLearningAgent(BaseRLAgent):
             # Gets the index of the problem
             problemIndex = self.problems[problemData]
 
-            if (action in self.actions[problemIndex]):
-                # If the problem and action has already been done, need to edit the reward
-                self.reseenProblems += 1
-
-                # Gets the index of the action
-                # This doesn't need a try-catch as a linear search is faster
-                # This is because the number of elements will always be very low
-                actionIndex = self.actions[problemIndex].index(action)
-
-                if (self.__getNextSuccess(str(problem + [previousOrder + [action]])) == 0):
-                    # If all the next actions result in an unsuccessful ordering then set the reward to 0
-                    self.rewards1[problemIndex][actionIndex] = 0
-                    self.rewards2[problemIndex][actionIndex] = 0
-
-                    # Updates the success value to be 0
-                    self.success[problemIndex][actionIndex] = 0
-                else:
-                    # Updates the success value
-                    self.success[problemIndex][actionIndex] = success
-
-                    randInt = random.random()
-                    if (randInt < 0.5):
-                        # Gets the expected future reward
-                        expectedFutureReward = self.__getExpectedFutureReward(str(problem + [previousOrder + [action]]), 1)
-
-                        # Updates the first reward value using the Q-Learning algorithm
-                        self.rewards1[problemIndex][actionIndex] = self.rewards1[problemIndex][actionIndex] + (self.alpha * (reward + (self.gamma * expectedFutureReward) - self.rewards1[problemIndex][actionIndex]))
-                    else:
-                        # Gets the expected future reward
-                        expectedFutureReward = self.__getExpectedFutureReward(str(problem + [previousOrder + [action]]), 2)
-
-                        # Updates the second reward value using the Q-Learning algorithm
-                        self.rewards2[problemIndex][actionIndex] = self.rewards2[problemIndex][actionIndex] + (self.alpha * (reward + (self.gamma * expectedFutureReward) - self.rewards2[problemIndex][actionIndex]))
+            # Increment a reseen problems counter by 1
+            self.reseenProblems += 1
         except KeyError:
-            # If it is a new problem then need to add the problem, action and reward
+            # If it is a new problem then need to add 0 values to all the arrays
+            self.__addActions(problemData, previousOrder)
 
-            # Adds the problem to the array and gets the index
-            self.problems[problemData] = len(self.problems)
+            # Gets the index of the problem
             problemIndex = self.problems[problemData]
 
-            # Adds the arrays for the action, success and reward
-            self.actions.append([])
-            self.success.append([])
-            self.rewards1.append([])
-            self.rewards2.append([])
+        # Gets the index of the action
+        actionIndex = self.actions[problemIndex].index(action)
 
-            # Adds all the possible actions for this problem
-            # Initialises the success as 1 and the reward as 0 if it hasn't been seen yet
-            for nextAction in range(0, self.points):
-                if (nextAction in previousOrder):
-                    # Action already done so can't do it again and doesn't need to be added to the arrays
-                    pass
-                else:
-                    if (nextAction == action):
-                        # Adds the action and success
-                        self.actions[problemIndex].append(nextAction)
-                        self.success[problemIndex].append(success)
+        if ((self.__getNextSuccess(str(problem + [previousOrder + [action]])) == 0) or (success == 0)):
+            # If all the next actions result in an unsuccessful ordering then set the reward to 0
+            self.rewards1[problemIndex][actionIndex] = 0
+            self.rewards2[problemIndex][actionIndex] = 0
 
-                        randInt = random.random()
-                        if (randInt < 0.5):
-                            # Gets the expected future reward
-                            expectedFutureReward = self.__getExpectedFutureReward(str(problem + [previousOrder + [nextAction]]), 1)
+            # Updates the success value to be 0
+            self.success[problemIndex][actionIndex] = 0
 
-                            # Adds the reward to rewards 1 using the Q-Learning algorithm and previous reward as 0
-                            self.rewards1[problemIndex].append(self.alpha * (reward + (self.gamma * expectedFutureReward)))
-                            self.rewards2[problemIndex].append(0)
-                        else:
-                            # Gets the expected future reward
-                            expectedFutureReward = self.__getExpectedFutureReward(str(problem + [previousOrder + [nextAction]]), 2)
+            # Updates the uncertainty to 0
+            self.actionUncertainty1[problemIndex][actionIndex] = 0
+            self.actionUncertainty2[problemIndex][actionIndex] = 0
+        else:
+            # Updates the success value
+            self.success[problemIndex][actionIndex] = success
 
-                            # Adds the reward to rewards 2 using the Q-Learning algorithm and previous reward as 0
-                            self.rewards2[problemIndex].append(self.alpha * (reward + (self.gamma * expectedFutureReward)))
-                            self.rewards1[problemIndex].append(0)
+            randInt = random.random()
+            if (randInt < 0.5):
+                # Gets the expected future reward
+                expectedFutureReward = self.__getExpectedFutureReward(
+                    str(problem + [previousOrder + [action]]), 1)
+
+                # Update the temp reward and counter
+                self.tempReward1[problemIndex][actionIndex] = self.tempReward1[problemIndex][actionIndex] + reward + (self.gamma * expectedFutureReward)
+                self.timesSeen1[problemIndex][actionIndex] += 1
+
+                # Checks to see if the problem and action has been seen enough
+                if (self.timesSeen1[problemIndex][actionIndex] == self.requiredTimesSeen):
+                    # Check to see if there has been enough of a change
+                    if (abs(self.rewards1[problemIndex][actionIndex] - (self.tempReward1[problemIndex][actionIndex] / self.requiredTimesSeen)) >= (2 * self.minChange)):
+                        # Change the reward
+                        self.rewards1[problemIndex][actionIndex] = (self.tempReward1[problemIndex][actionIndex] / self.requiredTimesSeen) + self.minChange
+
+                    # Reset the variables to 0
+                    self.tempReward1[problemIndex][actionIndex] = 0
+                    self.timesSeen1[problemIndex][actionIndex] = 0
+
+                    # Update the uncertainty of the values
+                    if ((len(previousOrder) + 1) == self.points):
+                        # Update the uncertainty to 0
+                        self.actionUncertainty1[problemIndex][actionIndex] = 0
                     else:
-                        # Adds the actions not seen with success 1
-                        self.actions[problemIndex].append(nextAction)
-                        self.success[problemIndex].append(1)
+                        # Update the uncertainty of the action
+                        self.actionUncertainty1[problemIndex][actionIndex] = self.__getUncertainty(problem, previousOrder, action, 1)
+            else:
+                # Gets the expected future reward
+                expectedFutureReward = self.__getExpectedFutureReward(str(problem + [previousOrder + [action]]), 2)
 
-                        # Adds a reward of 0
-                        self.rewards1[problemIndex].append(0)
-                        self.rewards2[problemIndex].append(0)
+                # Update the temp reward and counter
+                self.tempReward2[problemIndex][actionIndex] = self.tempReward2[problemIndex][actionIndex] + reward + (self.gamma * expectedFutureReward)
+                self.timesSeen2[problemIndex][actionIndex] += 1
 
-    # Gets the minimum reward of the new problem state
+                # Checks to see if the problem and action has been seen enough
+                if (self.timesSeen2[problemIndex][actionIndex] == self.requiredTimesSeen):
+                    # Check to see if there has been enough of a change
+                    if (abs(self.rewards2[problemIndex][actionIndex] - (self.tempReward2[problemIndex][actionIndex] / self.requiredTimesSeen)) >= (2 * self.minChange)):
+                        # Change the reward
+                        self.rewards2[problemIndex][actionIndex] = (self.tempReward2[problemIndex][actionIndex] / self.requiredTimesSeen) + self.minChange
+
+                    # Reset the variables to 0
+                    self.tempReward2[problemIndex][actionIndex] = 0
+                    self.timesSeen2[problemIndex][actionIndex] = 0
+
+                    # Update the uncertainty of the values
+                    if ((len(previousOrder) + 1) == self.points):
+                        # Update the uncertainty to 0
+                        self.actionUncertainty2[problemIndex][actionIndex] = 0
+                    else:
+                        # Update the uncertainty of the action
+                        self.actionUncertainty2[problemIndex][actionIndex] = self.__getUncertainty(problem, previousOrder, action, 2)
+
+    # Adds all possible actions to the arrays
+    def __addActions(self, problemData, previousOrder):
+        # If it is a new problem then need to add 0 values to all the arrays
+
+        # Adds the problem to the array and gets the index
+        self.problems[problemData] = len(self.problems)
+        problemIndex = self.problems[problemData]
+
+        # Adds the arrays for the action, success, rewards, uncertainty, temporary rewards and counters
+        self.actions.append([])
+        self.success.append([])
+        self.rewards1.append([])
+        self.rewards2.append([])
+        self.actionUncertainty1.append([])
+        self.actionUncertainty2.append([])
+        self.tempReward1.append([])
+        self.tempReward2.append([])
+        self.timesSeen1.append([])
+        self.timesSeen2.append([])
+
+        # Adds all the possible actions for this problem
+        # Initialises the success as 1 and the reward as 0 if it hasn't been seen yet
+        for nextAction in range(0, self.points):
+            if (nextAction in previousOrder):
+                # Action already done so can't do it again and doesn't need to be added to the arrays
+                pass
+            else:
+                # Adds the actions not seen with success 1
+                self.actions[problemIndex].append(nextAction)
+                self.success[problemIndex].append(1)
+
+                # Adds a reward of 0
+                self.rewards1[problemIndex].append(0)
+                self.rewards2[problemIndex].append(0)
+
+                # Adds an uncertainty of 1
+                self.actionUncertainty1[problemIndex].append(1)
+                self.actionUncertainty2[problemIndex].append(1)
+
+                # Adds 0 to the temp rewards and counters
+                self.tempReward1[problemIndex].append(0)
+                self.tempReward2[problemIndex].append(0)
+                self.timesSeen1[problemIndex].append(0)
+                self.timesSeen2[problemIndex].append(0)
+
+    # endregion
+
+    # region Private Getters
+
+    # Gets the expected future reward of the next actions
     def __getExpectedFutureReward(self, newProblemState, dictToUse):
-        # Gets the expected future reward of the next actions
         try:
             # Gets the index of the new problem
             newProblemIndex = self.problems[newProblemState]
 
             if (dictToUse == 1):
-                # Gets the maximum of the actions in the first array as this is the action that will be taken
-                return max(self.rewards1[newProblemIndex])
+                # Gets the action which returns the highest reward in the first array
+                actionIndex = self.rewards2[newProblemIndex].index(max(self.rewards2[newProblemIndex]))
+
+                # Return the predicted reward of the action in the second array
+                return self.rewards1[newProblemIndex][actionIndex]
             else:
-                # Gets the maximum of the actions in the second array as this is the action that will be taken
-                return max(self.rewards2[newProblemIndex])
+                # Gets the action which returns the highest reward in the second array
+                actionIndex = self.rewards1[newProblemIndex].index(max(self.rewards1[newProblemIndex]))
+
+                # Return the predicted reward of the action in the first array
+                return self.rewards2[newProblemIndex][actionIndex]
         except KeyError:
             # Problem not seen before so return 0
             return 0
 
+    # Gets whether the next state returns at least 1 successful ordering
     def __getNextSuccess(self, newProblemState):
-        # Gets whether the next state returns at least 1 successful ordering
         try:
             # Gets the index of the new problem
             newProblemIndex = self.problems[newProblemState]
@@ -443,6 +549,36 @@ class QLearningAgent(BaseRLAgent):
             # Problem not seen so presume success
             return 1
 
+    # Returns the uncertainty of doing the action in the current problem
+    def __getUncertainty(self, problem, order, action, arrayToUse):
+        # Get the problem
+        problemData = str(problem + [order + [action]])
+
+        try:
+            # Gets the index of the problem
+            problemIndex = self.problems[problemData]
+
+            # Gets the array to use
+            uncertaintyArray = self.actionUncertainty1[problemIndex] if (arrayToUse == 1) else self.actionUncertainty2[problemIndex]
+
+            # Returns the average of the future uncertainties
+            return (sum(uncertaintyArray) / float(len(uncertaintyArray)))
+        except KeyError:
+            # Problem not seen so uncertainty is 1
+            return 1
+
+    # endregion
+
+    # region Public Getters
+
+    # Returns the counter reseenProblems
     def getNumberOfReseenProblems(self):
-        # Returns the counter reseenProblems
         return self.reseenProblems
+
+    # Returns the learning rewards and successes
+    def getLearnValues(self):
+        return self.learnSuccesses, self.learnRewards
+
+    # endregion
+
+# endregion

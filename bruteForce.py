@@ -2,6 +2,8 @@ import numpy
 import copt
 import utilities
 
+# region Get Solution
+
 # Gets the best solution for the inputted problem
 def getSolution(problem):
     # Gets all the solutions
@@ -16,3 +18,5 @@ def getSolution(problem):
         return bestOrder, success, bestReward
     else:
         return list(range(0, len(problem))), 0, 0
+
+# endregion

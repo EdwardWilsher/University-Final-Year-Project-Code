@@ -5,21 +5,29 @@ import random
 import math
 import utilities
 
+# region Base Class
+
 # Base Heuristic class for all the Combinatorial Optimisation Heuristics
 # These Heuristics will be used to provide a guide as to how well the RL agent is doing
 class BaseHeuristic():
     # Declares this class as an abstract class
     __metaclass__ = abc.ABCMeta
 
+    # Each Sub-Class needs a method called getSolution
     @abc.abstractmethod
     def getSolution(self, problem):
-        # Each Sub-Class needs a method called getSolution
         return
+
+# endregion
+
+# region Manhattan Heuristic
 
 # This class will be used to work out the solution of the problem using the Manhattan Heuristic
 class ManhattanHeuristic(BaseHeuristic):
 
-    # Orders the points by the shortest distance first
+    # region Get Solution
+
+    # Gets a solution to the problem using the Manhattan Heuristic
     def getSolution(self, problem):
         # Sets up the order and distance variables
         order = []
@@ -55,6 +63,10 @@ class ManhattanHeuristic(BaseHeuristic):
         result = copt.evaluate(problem, order)
         return result['order'], result['success'], (utilities.MaxRewardPerPoint * numberOfPoints) - result['measure']
 
+    # endregion
+
+    # region Get Next Action
+
     # Finds the next point to connect when using the manhattan heuristic
     @staticmethod
     def getNextAction(problem, previousOrder):
@@ -82,10 +94,18 @@ class ManhattanHeuristic(BaseHeuristic):
         # Return the best action using the manhattan heuristic
         return nextAction
 
+    # endregion
+
+# endregion
+
+# region Random Heuristic
+
 # This class will be used to work out the solution of the problem using a random ordering
 class RandomHeuristic(BaseHeuristic):
 
-    # Uses a random ordering
+    # region Get Solution
+
+    # Uses a random ordering to get a solution to the problem
     def getSolution(self, problem):
         # Sets up the order variable
         order = []
@@ -104,6 +124,10 @@ class RandomHeuristic(BaseHeuristic):
         result = copt.evaluate(problem, order)
         return result['order'], result['success'], (utilities.MaxRewardPerPoint * numberOfPoints) - result['measure']
 
+    # endregion
+
+    #region Get Next Action
+
     # Finds the next point to connect when using the random ordering
     @staticmethod
     def getNextAction(problem, previousOrder):
@@ -117,6 +141,13 @@ class RandomHeuristic(BaseHeuristic):
         # Returns a random action
         return random.choice(remainingActions)
 
+    # endregion
+
+# endregion
+
+# region Hill Climbing Heuristic
+
+# This class uses the Hill Climbing Heuristic to obtain solutions
 class HillClimbing(BaseHeuristic):
 
     # Gets the solution via the hill climbing heuristic
@@ -149,6 +180,11 @@ class HillClimbing(BaseHeuristic):
         result = copt.evaluate(problem, currentSolution)
         return result['order'], result['success'], (utilities.MaxRewardPerPoint * len(problem)) - result['measure']
 
+# endregion
+
+# region Simulated Annealing Heuristic
+
+# This class uses the simulated annealing Heuristic to obtain solutions
 class SimulatedAnnealing(BaseHeuristic):
 
     # Gets the solution via simulated annealing
@@ -163,7 +199,7 @@ class SimulatedAnnealing(BaseHeuristic):
         # Sets up the variables temperature and iterations and the constants alpha and beta
         temperature = 500
         iterations = 10
-        alpha = 0.1
+        alpha = 0.2
         beta = 2
 
         # Loop while temperature is greater than 1
@@ -191,3 +227,5 @@ class SimulatedAnnealing(BaseHeuristic):
         # Gets all the values for the chosen ordering
         result = copt.evaluate(problem, currentSolution)
         return result['order'], result['success'], (utilities.MaxRewardPerPoint * len(problem)) - result['measure']
+
+# endregion

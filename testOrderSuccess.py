@@ -6,6 +6,9 @@ import rlAgents
 import time
 import utilities
 import threading
+import bruteForce
+
+# region User Input
 
 # Number of problems that will be used to test the RL Agent and the number of points in each problem
 numberOfProblems = int(input("Please input the number of problems to use to test the solutions: "))
@@ -23,9 +26,6 @@ if (check.lower() == "y"):
 else:
     roundNum = 1
 
-# Initialise the Q-Learning agent
-qLearningAgent = rlAgents.QLearningAgent(numberOfPoints, roundNum)
-
 # Allow the user to reduce the square that the problem coordinates have to be in
 check = input("Do you want to test on a smaller problem (Y/N): ")
 
@@ -35,11 +35,29 @@ if (check.lower() == "y"):
 else:
     squareSize = 0
 
-# Start the timer
+# endregion
+
+# region Learning
+
+# Initialise the Q-Learning agent
+qLearningAgent = rlAgents.QLearningAgent(numberOfPoints, roundNum)
+
+# Gets the start time
 startTime = time.time()
 
 # Allow the agent to learn
 qLearningAgent.learn(numberToLearn, squareSize)
+
+# Gets the time after the learning has finished and calculates how long the learning took
+timeTaken = time.time() - startTime
+print("Learning took", timeTaken, "seconds")
+
+# endregion
+
+# region Testing
+
+# Gets the mid time
+midTime = time.time()
 
 # Create the instances of the heuristics that will be used to test how good the RL Agent is
 manhat = heuristics.ManhattanHeuristic()
@@ -99,6 +117,13 @@ for x in range(0, numberOfProblems):
         # Checks whether the problem is valid
         validProblem = utilities.checkValidProblem(problem) if squareSize == 0 else True
 
+        if (validProblem is True):
+            # Gets the brute force solution to the problem
+            _, bruteSuccess, _ = bruteForce.getSolution(problem)
+
+            # If the brute force was unsuccessful then ignore the problem
+            validProblem = False if bruteSuccess == 0 else True
+
     # Gets the solutions to the problem in a separate thread
     thread = threading.Thread(target=getSolutions, args=(problem,))
     thread.start()
@@ -112,9 +137,17 @@ while (thread.is_alive() or outputThread.is_alive()):
 
 print("Testing Finished")
 
-# Stop the timer
+# Gets the time after the testing has finished and calculates how long the testing took
+timeTaken = time.time() - midTime
+print("Testing took", timeTaken, "seconds")
+
+# endregion
+
+# region Output
+
+# Gets the end time and calculates how long the program took
 timeTaken = time.time() - startTime
-print(timeTaken)
+print("The total time that the program took, in seconds, was", timeTaken)
 
 # Get the x-axis (number of different heuristics) and y-axis (percentage correct)
 xAxis = [1, 2, 3, 4, 5]
@@ -143,3 +176,5 @@ pyplot.title("Graph to show the success of the heuristics and the RL Agent")
 
 # Show the plots
 pyplot.show()
+
+# endregion

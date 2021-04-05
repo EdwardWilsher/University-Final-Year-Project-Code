@@ -8,6 +8,8 @@ import time
 import utilities
 import threading
 
+# region User Input
+
 # Number of problems that will be used to test the RL Agent and the number of points in each problem
 numberOfProblems = int(input("Please input the number of problems to use to test the solutions: "))
 numberOfPoints = int(input("Please input the number of points to connect: "))
@@ -24,9 +26,6 @@ if (check.lower() == "y"):
 else:
     roundNum = 1
 
-# Initialise the Q-Learning agent
-qLearningAgent = rlAgents.QLearningAgent(numberOfPoints, roundNum)
-
 # Allow the user to reduce the square that the problem coordinates have to be in
 check = input("Do you want to test on a smaller problem (Y/N): ")
 
@@ -36,11 +35,29 @@ if (check.lower() == "y"):
 else:
     squareSize = 0
 
-# Start the timer
+# endregion
+
+# region Learning
+
+# Initialise the Q-Learning agent
+qLearningAgent = rlAgents.QLearningAgent(numberOfPoints, roundNum)
+
+# Gets the start time
 startTime = time.time()
 
 # Allow the agent to learn
 qLearningAgent.learn(numberToLearn, squareSize)
+
+# Gets the time after the learning has finished and calculates how long the learning took
+timeTaken = time.time() - startTime
+print("Learning took", timeTaken, "seconds")
+
+# endregion
+
+# region Testing
+
+# Gets the mid time
+midTime = time.time()
 
 # Create the instances of the heuristics that will be used to test how good the RL Agent is
 manhat = heuristics.ManhattanHeuristic()
@@ -50,28 +67,28 @@ simAnneal = heuristics.SimulatedAnnealing()
 
 # Arrays that will be used to store the orderings, success and solutions
 # For the heuristics, the RL agent and the brute force approach
-manhatOrders = [[-1]*numberOfPoints]*numberOfProblems
-manhatSuccesses = [-1]*numberOfProblems
+manhatOrders = [[-1] * numberOfPoints] * numberOfProblems
+manhatSuccesses = [-1] * numberOfProblems
 manhatRewards = [-1] * numberOfProblems
 
-randOrders = [[-1]*numberOfPoints]*numberOfProblems
-randSuccesses = [-1]*numberOfProblems
+randOrders = [[-1] * numberOfPoints] * numberOfProblems
+randSuccesses = [-1] * numberOfProblems
 randRewards = [-1] * numberOfProblems
 
-hillClimbOrders = [[-1]*numberOfPoints]*numberOfProblems
-hillClimbSuccesses = [-1]*numberOfProblems
+hillClimbOrders = [[-1] * numberOfPoints] * numberOfProblems
+hillClimbSuccesses = [-1] * numberOfProblems
 hillClimbRewards = [-1] * numberOfProblems
 
-simAnnealOrders = [[-1]*numberOfPoints]*numberOfProblems
-simAnnealSuccesses = [-1]*numberOfProblems
+simAnnealOrders = [[-1] * numberOfPoints] * numberOfProblems
+simAnnealSuccesses = [-1] * numberOfProblems
 simAnnealRewards = [-1] * numberOfProblems
 
-qLearnOrders = [[-1]*numberOfPoints]*numberOfProblems
-qLearnSuccesses = [-1]*numberOfProblems
+qLearnOrders = [[-1] * numberOfPoints] * numberOfProblems
+qLearnSuccesses = [-1] * numberOfProblems
 qLearnRewards = [-1] * numberOfProblems
 
-bruteOrders = [[-1]*numberOfPoints]*numberOfProblems
-bruteSuccesses = [-1]*numberOfProblems
+bruteOrders = [[-1] * numberOfPoints] * numberOfProblems
+bruteSuccesses = [-1] * numberOfProblems
 bruteRewards = [-1] * numberOfProblems
 
 print("Testing Started")
@@ -105,7 +122,8 @@ for x in range(0, numberOfProblems):
     qLearnOrders[x], qLearnSuccesses[x], qLearnRewards[x] = qLearningAgent.getSolution(problem)
 
     # Starts the thread to output the percentage complete
-    outputThread = threading.Thread(target=utilities.outputPercentageComplete, args=(x + 1, numberOfProblems, qLearningAgent.getNumberOfReseenProblems(),))
+    outputThread = threading.Thread(target=utilities.outputPercentageComplete,
+                                    args=(x + 1, numberOfProblems, qLearningAgent.getNumberOfReseenProblems(),))
     outputThread.start()
 
 while (outputThread.is_alive()):
@@ -113,6 +131,14 @@ while (outputThread.is_alive()):
     pass
 
 print("Testing Finished")
+
+# Gets the time after the testing has finished and calculates how long the testing took
+timeTaken = time.time() - midTime
+print("Testing took", timeTaken, "seconds")
+
+# endregion
+
+# region Formatting
 
 # Lists of the rewards for the successful orderings
 manhatRewSuc = []
@@ -123,7 +149,6 @@ qLearnRewSuc = []
 
 # Iterates through the arrays to smooth them
 # If the heuristic or agent was unsuccessful then that needs to be smoothed over
-# Changed to be the same as the the brute force
 # Otherwise it is added to the list of successful rewards
 for x in range(0, numberOfProblems):
     if (manhatSuccesses[x] == 0):
@@ -151,14 +176,18 @@ for x in range(0, numberOfProblems):
     else:
         qLearnRewSuc.append(bruteRewards[x] - qLearnRewards[x])
 
-# Stop the timer
+# endregion
+
+# region Output
+
+# Gets the end time and calculates how long the program took
 timeTaken = time.time() - startTime
-print(timeTaken)
+print("The total time that the program took, in seconds, was", timeTaken)
 
 # Get the x-axis
-xAxis = list(range(1, numberOfProblems+1))
+xAxis = list(range(1, numberOfProblems + 1))
 
-fig, plots = pyplot.subplots(5, sharex = True)
+fig, plots = pyplot.subplots(5, sharex=True)
 
 # Calculate the difference to the optimal rewards
 manhatDiff = numpy.subtract(bruteRewards, manhatRewards)
@@ -177,11 +206,11 @@ plots[3].plot(xAxis, simAnnealDiff)
 plots[4].plot(xAxis, qLearnDiff)
 
 # Name the x-axis, y-axis and Title
-plots[0].set(ylabel = "Order Distance")
-plots[1].set(ylabel = "Order Distance")
-plots[2].set(ylabel = "Order Distance")
-plots[3].set(ylabel = "Order Distance")
-plots[4].set(xlabel = "Problem Number", ylabel = "Order Distance")
+plots[0].set(ylabel="Order Distance")
+plots[1].set(ylabel="Order Distance")
+plots[2].set(ylabel="Order Distance")
+plots[3].set(ylabel="Order Distance")
+plots[4].set(xlabel="Problem Number", ylabel="Order Distance")
 plots[0].set_title("Manhattan Ordering")
 plots[1].set_title("Random Ordering")
 plots[2].set_title("Hill Climbing")
@@ -208,3 +237,5 @@ print("Q-Learn Average: ", sum(qLearnRewSuc) / len(qLearnRewSuc))
 
 # Show the plots
 pyplot.show()
+
+# endregion
