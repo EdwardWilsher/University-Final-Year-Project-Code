@@ -118,6 +118,10 @@ pyplot.show()
 # Get the x-axis
 xAxis = list(range(1, numberToTest+1))
 
+# Variables for the last reward and last index
+lastIndex = -1
+lastReward = -1
+
 # Edit the rewards so that it is smooth
 validReward = False
 for index in range(0, len(rewards)):
@@ -130,8 +134,16 @@ for index in range(0, len(rewards)):
         # Set this reward to the previous reward
         rewards[index] = rewards[index - 1]
 
+    # If the reward is different to the last reward then change the last index
+    if (rewards[index] != lastReward):
+        lastIndex = index + 1
+        lastReward = rewards[index]
+
 # Print the average reward
 print("Average Reward: ", (sum(rewards) / float(len(rewards))))
+
+# Print the point at which learning is completed
+print("Learning Completed after", lastIndex, "problems")
 
 # Plots the rewards graph
 pyplot.plot(xAxis, rewards)
