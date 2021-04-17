@@ -126,7 +126,7 @@ class RandomHeuristic(BaseHeuristic):
 
     # endregion
 
-    #region Get Next Action
+    # region Get Next Action
 
     # Finds the next point to connect when using the random ordering
     @staticmethod
