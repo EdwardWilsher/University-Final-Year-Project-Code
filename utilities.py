@@ -114,46 +114,46 @@ def generateSmallerProblem(numberOfPoints, squareSize):
                     point4 = point3 - 987
             elif (numberOfPoints == 7):
                 if (point == 0):
-                    point1 = random.randint(500 - squareSize, 500 + squareSize)
+                    point1 = random.randint(500 - squareSize, 500)
                     point2 = point1 + 50
 
-                    point3 = random.randint(1500 - squareSize, 1500 + squareSize)
+                    point3 = random.randint(1500 - squareSize, 1500)
                     point4 = point3 - 950
                 elif (point == 1):
-                    point1 = random.randint(530 - squareSize, 530 + squareSize)
+                    point1 = random.randint(530 - squareSize, 530)
                     point2 = point1 - 15
 
-                    point3 = random.randint(1530 - squareSize, 1530 + squareSize)
+                    point3 = random.randint(1530 - squareSize, 1530)
                     point4 = point3 - 1015
                 elif (point == 2):
-                    point1 = random.randint(530 - squareSize, 530 + squareSize)
+                    point1 = random.randint(530 - squareSize, 530)
                     point2 = point1 - 50
 
-                    point3 = random.randint(1530 - squareSize, 1530 + squareSize)
+                    point3 = random.randint(1530 - squareSize, 1530)
                     point4 = point3 - 1050
                 elif (point == 3):
-                    point1 = random.randint(510 - squareSize, 510 + squareSize)
+                    point1 = random.randint(510 - squareSize, 510)
                     point2 = point1 - 60
 
-                    point3 = random.randint(1510 - squareSize, 1510 + squareSize)
+                    point3 = random.randint(1510 - squareSize, 1510)
                     point4 = point3 - 1060
                 elif (point == 4):
-                    point1 = random.randint(490 - squareSize, 490 + squareSize)
+                    point1 = random.randint(490 - squareSize, 490)
                     point2 = point1 - 40
 
-                    point3 = random.randint(1490 - squareSize, 1490 + squareSize)
+                    point3 = random.randint(1490 - squareSize, 1490)
                     point4 = point3 - 1040
                 elif (point == 5):
-                    point1 = random.randint(470 - squareSize, 470 + squareSize)
+                    point1 = random.randint(470 - squareSize, 470)
                     point2 = point1 + 10
 
-                    point3 = random.randint(1470 - squareSize, 1470 + squareSize)
+                    point3 = random.randint(1470 - squareSize, 1470)
                     point4 = point3 - 990
                 elif (point == 6):
-                    point1 = random.randint(470 - squareSize, 470 + squareSize)
+                    point1 = random.randint(470 - squareSize, 470)
                     point2 = point1 + 45
 
-                    point3 = random.randint(1470 - squareSize, 1470 + squareSize)
+                    point3 = random.randint(1470 - squareSize, 1470)
                     point4 = point3 - 965
 
             # Gets the second coordiante that's within the square
