@@ -176,6 +176,44 @@ for x in range(0, numberOfProblems):
     else:
         qLearnRewSuc.append(bruteRewards[x] - qLearnRewards[x])
 
+# Lists of the average rewards every 10 problems for the successful orderings
+manhatAvRew = []
+randAvRew = []
+hillClimbAvRew = []
+simAnnealAvRew = []
+qLearnAvRew = []
+
+# Lists of the temp rewards every 10 problems for the successful orderings
+manhatTempRew = []
+randTempRew = []
+hillClimbTempRew = []
+simAnnealTempRew = []
+qLearnTempRew = []
+
+# Iterates through the array to get the average reward every 10 problems
+for x in range(0, numberOfProblems):
+    # Add the current index
+    manhatTempRew.append(bruteRewards[x] - manhatRewards[x])
+    randTempRew.append(bruteRewards[x] - randRewards[x])
+    hillClimbTempRew.append(bruteRewards[x] - hillClimbRewards[x])
+    simAnnealTempRew.append(bruteRewards[x] - simAnnealRewards[x])
+    qLearnTempRew.append(bruteRewards[x] - qLearnRewards[x])
+
+    if (((x+1) % 10) == 0):
+        # Append the averages
+        manhatAvRew.append(sum(manhatTempRew) / len(manhatTempRew))
+        randAvRew.append(sum(randTempRew) / len(randTempRew))
+        hillClimbAvRew.append(sum(hillClimbTempRew) / len(hillClimbTempRew))
+        simAnnealAvRew.append(sum(simAnnealTempRew) / len(simAnnealTempRew))
+        qLearnAvRew.append(sum(qLearnTempRew) / len(qLearnTempRew))
+
+        # Reset the temp lists
+        manhatTempRew = []
+        randTempRew = []
+        hillClimbTempRew = []
+        simAnnealTempRew = []
+        qLearnTempRew = []
+
 # endregion
 
 # region Output
@@ -185,25 +223,19 @@ timeTaken = time.time() - startTime
 print("The total time that the program took, in seconds, was", timeTaken)
 
 # Get the x-axis
-xAxis = list(range(1, numberOfProblems + 1))
+xAxis = list(range(1, len(manhatAvRew) + 1))
+scaledXAxis = [element*10 for element in xAxis]
 
 fig, plots = pyplot.subplots(5, sharex=True)
 
-# Calculate the difference to the optimal rewards
-manhatDiff = numpy.subtract(bruteRewards, manhatRewards)
-randDiff = numpy.subtract(bruteRewards, randRewards)
-hillClimbDiff = numpy.subtract(bruteRewards, hillClimbRewards)
-simAnnealDiff = numpy.subtract(bruteRewards, simAnnealRewards)
-qLearnDiff = numpy.subtract(bruteRewards, qLearnRewards)
-
 # Plot the heuristics
-plots[0].plot(xAxis, manhatDiff)
-plots[1].plot(xAxis, randDiff)
-plots[2].plot(xAxis, hillClimbDiff)
-plots[3].plot(xAxis, simAnnealDiff)
+plots[0].plot(scaledXAxis, manhatAvRew)
+plots[1].plot(scaledXAxis, randAvRew)
+plots[2].plot(scaledXAxis, hillClimbAvRew)
+plots[3].plot(scaledXAxis, simAnnealAvRew)
 
 # Plot the RL Agent
-plots[4].plot(xAxis, qLearnDiff)
+plots[4].plot(scaledXAxis, qLearnAvRew)
 
 # Name the x-axis, y-axis and Title
 plots[0].set(ylabel="Order Distance")
